@@ -9,6 +9,7 @@ import (
 type Config struct {
 	StorageDataSource string `env:"YA_STORAGE_DATA_SOURCE" env-required:"true"`
 	APODEndpoint      string `env:"YA_APOD_ENDPOINT" env-required:"true"`
+	APODAPIKey        string `env:"YA_APOD_API_KEY" env-required:"true"`
 	HTTPServer
 }
 

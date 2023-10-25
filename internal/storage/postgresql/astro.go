@@ -13,3 +13,10 @@ func (s *Storage) GetAstroDataByDay(date string) (astro.AstroData, error) {
 
 	return astro.AstroData{}, nil
 }
+
+func (s *Storage) SaveAstroData(data astro.AstroData, image, hdImage []byte) error {
+	const op = "storage.postgresql.SaveAstroData"
+
+	//todo if need return last id
+	return nil
+}

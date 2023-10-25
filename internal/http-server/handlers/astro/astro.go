@@ -17,12 +17,13 @@ type Response struct {
 }
 
 type AstroData struct {
-	Date        string `json:"date,omitempty"`
-	Explanation string `json:"explanation,omitempty"`
-	Hdurl       string `json:"hdurl,omitempty"`
-	Title       string `json:"title,omitempty"`
-	Url         string `json:"url,omitempty"`
-	Image       string `json:"image,omitempty"`
+	MediaType   string `json:"media_type,omitempty"`
+	Date        string `json:"date"`
+	Explanation string `json:"explanation"`
+	Title       string `json:"title"`
+	Url         string `json:"url"`
+	HdUrl       string `json:"hdurl,omitempty"`
+	OriginalUrl string `json:"original_url"`
 }
 
 type AstroGetter interface {
