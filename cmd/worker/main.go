@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"sync"
 	"time"
 )
@@ -20,7 +21,7 @@ import (
 func main() {
 	cfg := config.MustLoad()
 
-	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	log := slog.New(slog.NewTextHandler(os.Stderr, nil))
 
 	storage, err := postgresql.New(cfg.StorageDataSource)
 	if err != nil {
@@ -30,8 +31,7 @@ func main() {
 	defer postgresql.Close(storage)
 
 	s := gocron.NewScheduler(time.UTC)
-	//job, err := s.Every(1).Second().Do(fetchAPOD, log, storage, cfg)
-	job, err := s.Every(1).Day().At("00:00").Do(fetchAPOD, log, storage, cfg)
+	job, err := s.Every(1).Day().At("00:00").Do(fetchAPOD, storage, cfg)
 
 	log.Info("young astrologer worker started")
 
@@ -39,13 +39,23 @@ func main() {
 		log.Error("Error in job", job.GetName(), sl.Err(err))
 	}
 
+	job.RegisterEventListeners(
+		gocron.BeforeJobRuns(func(jobName string) {
+			log.Info("job started", jobName)
+		}),
+		gocron.WhenJobReturnsError(func(jobName string, err error) {
+			log.Error("Error in job", jobName, sl.Err(err))
+		}),
+		gocron.WhenJobReturnsNoError(func(jobName string) {
+			log.Info("job done", jobName)
+		}),
+	)
+
 	s.StartBlocking()
 }
 
-func fetchAPOD(log *slog.Logger, storage *postgresql.Storage, cfg *config.Config) error {
+func fetchAPOD(storage *postgresql.Storage, cfg *config.Config) error {
 	const op = "worker.fetchAPOD"
-
-	log.Info("fetched apod data started")
 
 	u, err := url.Parse(cfg.APODEndpoint)
 	if err != nil {
@@ -78,21 +88,37 @@ func fetchAPOD(log *slog.Logger, storage *postgresql.Storage, cfg *config.Config
 	}
 
 	var image, hdImage []byte
-	if data.Url != "" && data.HdUrl != "" {
-		image, hdImage, err = getImages(data.Url, data.HdUrl)
-	} else if data.Url != "" {
-		image, err = downloadImage(data.Url)
-	}
-	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+	var imagesId int64
+	if data.MediaType == "image" {
+		if data.Url != "" && data.HdUrl != "" {
+			image, hdImage, err = getImages(data.Url, data.HdUrl)
+		} else if data.Url != "" {
+			image, err = downloadImage(data.Url)
+		}
+		if err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+
+		if image != nil {
+			parsedURL, _ := url.Parse(data.Url)
+			data.Url = path.Base(parsedURL.Path)
+		}
+		if hdImage != nil {
+			parsedURL, _ := url.Parse(data.HdUrl)
+			data.HdUrl = path.Base(parsedURL.Path)
+		}
+
+		if image != nil || hdImage != nil {
+			imagesId, err = storage.SaveImages(image, hdImage)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
-	_, _ = image, hdImage
-	if err := storage.SaveAstroData(data, image, hdImage); err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+	if err := storage.SaveAstroData(data, imagesId); err != nil {
+		return err
 	}
-
-	log.Info("fetched apod data successful complete")
 
 	return nil
 }

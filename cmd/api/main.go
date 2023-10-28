@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/vlladoff/young_astrologer/internal/config"
 	"github.com/vlladoff/young_astrologer/internal/http-server/handlers/astro"
+	"github.com/vlladoff/young_astrologer/internal/http-server/handlers/image"
 	"github.com/vlladoff/young_astrologer/internal/lib/logger/sl"
 	"github.com/vlladoff/young_astrologer/internal/storage/postgresql"
 	"log/slog"
@@ -19,7 +20,7 @@ import (
 func main() {
 	cfg := config.MustLoad()
 
-	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	log := slog.New(slog.NewTextHandler(os.Stderr, nil))
 
 	log.Info("starting young astrologer api")
 
@@ -83,6 +84,8 @@ func initRouter(log *slog.Logger, storage *postgresql.Storage) *chi.Mux {
 	router.Route("/api/get", func(r chi.Router) {
 		r.Post("/", astro.GetByDay(log, storage))
 	})
+
+	router.Get("/{image_url}", image.GetImage(log, storage))
 
 	return router
 }
