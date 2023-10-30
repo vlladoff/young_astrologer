@@ -1,6 +1,0 @@
-# Migrate stage
-FROM migrate/migrate AS young_astrologer_migrations
-WORKDIR /app/young_astrologer_migrations
-COPY ./migrations/ .
-ENTRYPOINT ["migrate"]
-CMD ["-path", ".", "-database", "$YA_STORAGE_DATA_SOURCE", "up"]

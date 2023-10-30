@@ -8,7 +8,7 @@ services:
     env_file:
       - .env
     networks:
-      - young_astrologer_network
+      - new
 
   young_astrologer_api:
     build:
@@ -21,10 +21,14 @@ services:
     env_file:
       - .env
     networks:
-      - young_astrologer_network
+      - new
 
   postgres:
     image: postgres:16
+    networks:
+      new:
+        aliases:
+          - database
     restart: always
     environment:
       PGUSER: postgres
@@ -32,27 +36,30 @@ services:
       POSTGRES_DB: young_astrologer
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
-      interval: 1s
-      timeout: 5s
-      retries: 10
-    networks:
-      - young_astrologer_network
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    ports:
+      - "5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
   young_astrologer_migrations:
-    build:
-      context: ./
-      dockerfile: Dockerfile-migrate
+    image: migrate/migrate
+    restart: on-failure
+    networks:
+      - new
+    volumes:
+      - ./migrations:/migrations
     depends_on:
       - postgres
-    env_file:
-      - .env
-    networks:
-      - young_astrologer_network
+    links:
+      - postgres
+    command: -source=file://migrations -database $YA_STORAGE_DATA_SOURCE up
 
 volumes:
   pgdata:
 
 networks:
-  young_astrologer_network:
+  new:
+    driver: bridge
