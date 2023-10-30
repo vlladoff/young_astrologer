@@ -31,7 +31,8 @@ func main() {
 	defer postgresql.Close(storage)
 
 	s := gocron.NewScheduler(time.UTC)
-	job, err := s.Every(1).Day().At("00:00").Do(fetchAPOD, storage, cfg)
+	job, err := s.Every(1).Day().Do(fetchAPOD, storage, cfg)
+	//job, err := s.Every(1).Day().At("00:00").Do(fetchAPOD, storage, cfg)
 
 	log.Info("young astrologer worker started")
 
