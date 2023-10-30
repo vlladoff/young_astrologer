@@ -1,0 +1,9 @@
+# Build stage for young_astrologer_api
+FROM golang:1.21-alpine AS young_astrologer_api
+WORKDIR /app/young_astrologer_api
+COPY . .
+RUN go mod download
+COPY ./cmd/api/ .
+RUN go build -o young_astrologer_api main.go
+EXPOSE 8080
+CMD ["./young_astrologer_api"]
