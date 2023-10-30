@@ -3,7 +3,6 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile-worker
-      target: young_astrologer_worker
     depends_on:
       - young_astrologer_migrations
     env_file:
@@ -15,7 +14,6 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile-api
-      target: young_astrologer_api
     depends_on:
       - young_astrologer_worker
     ports:
@@ -46,7 +44,6 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile-migrate
-      target: young_astrologer_migrations
     depends_on:
       - postgres
     env_file:

@@ -2,4 +2,5 @@
 FROM migrate/migrate AS young_astrologer_migrations
 WORKDIR /app/young_astrologer_migrations
 COPY ./migrations/ .
-CMD ["-database", "-path", ".", "$YA_STORAGE_DATA_SOURCE", "up"]
+ENTRYPOINT ["migrate"]
+CMD ["-path", "file://migrations", "-database", "$YA_STORAGE_DATA_SOURCE", "up"]
