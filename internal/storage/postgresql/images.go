@@ -1,6 +1,7 @@
 package postgresql
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 )
@@ -31,14 +32,14 @@ func (s *Storage) GetImageData(imageName string) ([]byte, error) {
 	return image, nil
 }
 
-func (s *Storage) SaveImages(image, hdImage []byte) (int64, error) {
+func (s *Storage) SaveImages(image, hdImage *bytes.Buffer) (int64, error) {
 	const op = "storage.postgresql.images.SaveImages"
 
 	query := "INSERT INTO images(image, hd_image) VALUES($1, $2) RETURNING id"
 
 	var id int64
 
-	err := s.db.QueryRow(query, image, hdImage).Scan(&id)
+	err := s.db.QueryRow(query, image.Bytes(), hdImage.Bytes()).Scan(&id)
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}

@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/vlladoff/young_astrologer/internal/http-server/handlers/astro"
@@ -44,7 +45,7 @@ func (w *Worker) fetchAPOD() error {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	var image, hdImage []byte
+	var image, hdImage *bytes.Buffer
 	var imagesId int64
 	if data.MediaType == "image" {
 		if data.Url != "" && data.HdUrl != "" {
