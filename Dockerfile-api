@@ -1,9 +1,14 @@
 # Build stage for young_astrologer_api
-FROM golang:1.21-alpine AS young_astrologer_api
+FROM golang:1.21-alpine AS builder
 WORKDIR /app/young_astrologer_api
 COPY . .
 RUN go mod download
 COPY ./cmd/api/ .
 RUN go build -o young_astrologer_api main.go
+
+FROM scratch AS young_astrologer_api
+COPY --from=builder /app/young_astrologer_api/.env .env
+COPY --from=builder /app/young_astrologer_api/young_astrologer_api /young_astrologer_api
+
 EXPOSE 8080
 CMD ["./young_astrologer_api"]
